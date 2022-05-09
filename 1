@@ -1,0 +1,25 @@
+rand(GetTickCount());
+LoadLibrary(L"ntdll.dll");
+NtQueryKey = (NTQK)GetProcAddress(GetModuleHandle(L"ntdll.dll"), "NtQueryKey");
+if (!AdjustCurrentPrivilege(SE_TAKE_OWNERSHIP_NAME)) {
+    printf("failed to adjust privilege\n");
+    return 1;
+}
+
+// Monitors
+OpenThen(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Enum\\DISPLAY", {
+    ForEachSubkey(key, {
+        OpenThen(key, name, {
+            ForEachSubkey(key, {
+                OpenThen(key, name, {
+                    ForEachSubkey(key, {
+                        if (_wcsicmp(name, L"device parameters") == 0) {
+                            SpoofBinary(key, name, L"EDID");
+                            break;
+                        }
+                    });
+                });
+            });
+        });
+    });
+});
